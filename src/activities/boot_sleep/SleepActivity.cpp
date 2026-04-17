@@ -40,12 +40,14 @@ void SleepActivity::onEnter() {
       } else {
         return renderCustomSleepScreen();
       }
+    case (CrossPointSettings::SLEEP_SCREEN_MODE::CUSTOM_COVER):
+      return renderCustomCoverSleepScreen();
     default:
       return renderDefaultSleepScreen();
   }
 }
 
-void SleepActivity::renderCustomSleepScreen() const {
+bool SleepActivity::tryRenderCustomBmp() const {
   // Check if we have a /.sleep (preferred) or /sleep directory
   const char* sleepDir = nullptr;
   auto dir = Storage.open("/.sleep");
@@ -61,17 +63,11 @@ void SleepActivity::renderCustomSleepScreen() const {
   if (sleepDir) {
     std::vector<std::string> files;
     char name[500];
-    // collect all valid BMP files
     for (auto file = dir.openNextFile(); file; file = dir.openNextFile()) {
-      if (file.isDirectory()) {
-        continue;
-      }
+      if (file.isDirectory()) continue;
       file.getName(name, sizeof(name));
       auto filename = std::string(name);
-      if (filename[0] == '.') {
-        continue;
-      }
-
+      if (filename[0] == '.') continue;
       if (!FsHelpers::hasBmpExtension(filename)) {
         LOG_DBG("SLP", "Skipping non-.bmp file name: %s", name);
         continue;
@@ -85,8 +81,6 @@ void SleepActivity::renderCustomSleepScreen() const {
     }
     const auto numFiles = files.size();
     if (numFiles > 0) {
-      // Pick a random wallpaper, excluding recently shown ones.
-      // Window: up to SLEEP_RECENT_COUNT entries, capped at numFiles-1.
       const uint16_t fileCount = static_cast<uint16_t>(std::min(numFiles, static_cast<size_t>(UINT16_MAX)));
       const uint8_t window =
           static_cast<uint8_t>(std::min(static_cast<size_t>(APP_STATE.recentSleepFill), numFiles - 1));
@@ -104,24 +98,35 @@ void SleepActivity::renderCustomSleepScreen() const {
         Bitmap bitmap(file, true);
         if (bitmap.parseHeaders() == BmpReaderError::Ok) {
           renderBitmapSleepScreen(bitmap);
-          return;
+          return true;
         }
       }
     }
   }
-  // Look for sleep.bmp on the root of the sd card to determine if we should
-  // render a custom sleep screen instead of the default.
+
+  // Fall back to /sleep.bmp on the root of the SD card
   FsFile file;
   if (Storage.openFileForRead("SLP", "/sleep.bmp", file)) {
     Bitmap bitmap(file, true);
     if (bitmap.parseHeaders() == BmpReaderError::Ok) {
       LOG_DBG("SLP", "Loading: /sleep.bmp");
       renderBitmapSleepScreen(bitmap);
-      return;
+      return true;
     }
   }
 
+  return false;
+}
+
+void SleepActivity::renderCustomSleepScreen() const {
+  if (tryRenderCustomBmp()) return;
   renderDefaultSleepScreen();
+}
+
+void SleepActivity::renderCustomCoverSleepScreen() const {
+  // Custom first; fall back to cover, then dark
+  if (tryRenderCustomBmp()) return;
+  renderCoverSleepScreen();
 }
 
 void SleepActivity::renderDefaultSleepScreen() const {
@@ -218,6 +223,11 @@ void SleepActivity::renderCoverSleepScreen() const {
   switch (SETTINGS.sleepScreen) {
     case (CrossPointSettings::SLEEP_SCREEN_MODE::COVER_CUSTOM):
       renderNoCoverSleepScreen = &SleepActivity::renderCustomSleepScreen;
+      break;
+    case (CrossPointSettings::SLEEP_SCREEN_MODE::CUSTOM_COVER):
+      // Called as second-chance fallback from renderCustomCoverSleepScreen;
+      // if no cover either, fall through to dark.
+      renderNoCoverSleepScreen = &SleepActivity::renderDefaultSleepScreen;
       break;
     default:
       renderNoCoverSleepScreen = &SleepActivity::renderDefaultSleepScreen;

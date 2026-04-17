@@ -24,6 +24,7 @@ class CrossPointSettings {
     COVER = 3,
     BLANK = 4,
     COVER_CUSTOM = 5,
+    CUSTOM_COVER = 6,
     SLEEP_SCREEN_MODE_COUNT
   };
   enum SLEEP_SCREEN_COVER_MODE { FIT = 0, CROP = 1, SLEEP_SCREEN_COVER_MODE_COUNT };
@@ -199,6 +200,10 @@ class CrossPointSettings {
   uint8_t showHiddenFiles = 0;
   // Image rendering mode in EPUB reader
   uint8_t imageRendering = IMAGES_DISPLAY;
+  // Todoist API key (Addons)
+  char todoistApiKey[128] = "";
+  // Timezone offset from UTC in hours (e.g. "-5" or "+3"), empty = UTC
+  char tzOffsetStr[8] = "";
 
   ~CrossPointSettings() = default;
 

@@ -27,6 +27,9 @@ int HomeActivity::getMenuItemCount() const {
   if (hasOpdsUrl) {
     count++;
   }
+  if (hasTodoistApiKey) {
+    count++;
+  }
   return count;
 }
 
@@ -112,6 +115,8 @@ void HomeActivity::onEnter() {
 
   // Check if OPDS browser URL is configured
   hasOpdsUrl = strlen(SETTINGS.opdsServerUrl) > 0;
+  // Check if Todoist API key is configured
+  hasTodoistApiKey = strlen(SETTINGS.todoistApiKey) > 0;
 
   selectorIndex = 0;
 
@@ -188,6 +193,7 @@ void HomeActivity::loop() {
     // Calculate dynamic indices based on which options are available
     int idx = 0;
     int menuSelectedIndex = selectorIndex - static_cast<int>(recentBooks.size());
+    const int todoistIdx = hasTodoistApiKey ? idx++ : -1;
     const int fileBrowserIdx = idx++;
     const int recentsIdx = idx++;
     const int opdsLibraryIdx = hasOpdsUrl ? idx++ : -1;
@@ -204,6 +210,8 @@ void HomeActivity::loop() {
       onOpdsBrowserOpen();
     } else if (menuSelectedIndex == fileTransferIdx) {
       onFileTransferOpen();
+    } else if (menuSelectedIndex == todoistIdx) {
+      onTodoistOpen();
     } else if (menuSelectedIndex == settingsIdx) {
       onSettingsOpen();
     }
@@ -230,9 +238,14 @@ void HomeActivity::render(RenderLock&&) {
   std::vector<UIIcon> menuIcons = {Folder, Recent, Transfer, Settings};
 
   if (hasOpdsUrl) {
-    // Insert OPDS Browser after File Browser
+    // Insert OPDS Browser after Recent Books
     menuItems.insert(menuItems.begin() + 2, tr(STR_OPDS_BROWSER));
     menuIcons.insert(menuIcons.begin() + 2, Library);
+  }
+
+  if (hasTodoistApiKey) {
+    menuItems.insert(menuItems.begin(), tr(STR_TODOIST));
+    menuIcons.insert(menuIcons.begin(), Todoist);
   }
 
   GUI.drawButtonMenu(
@@ -267,5 +280,7 @@ void HomeActivity::onRecentsOpen() { activityManager.goToRecentBooks(); }
 void HomeActivity::onSettingsOpen() { activityManager.goToSettings(); }
 
 void HomeActivity::onFileTransferOpen() { activityManager.goToFileTransfer(); }
+
+void HomeActivity::onTodoistOpen() { activityManager.goToTodoist(); }
 
 void HomeActivity::onOpdsBrowserOpen() { activityManager.goToBrowser(); }

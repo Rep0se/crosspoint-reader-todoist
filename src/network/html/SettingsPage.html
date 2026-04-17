@@ -79,6 +79,14 @@
       padding: 10px 0;
       border-bottom: 1px solid var(--border-color);
     }
+    .setting-label {
+      font-size: 0.85em;
+      color: #888;
+      font-style: italic;
+      margin: 2px 0 8px 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+    }
     .setting-row:last-child {
       border-bottom: none;
     }
@@ -311,7 +319,7 @@
     }
 
     if (setting.type === 'string') {
-      const inputType = setting.name.toLowerCase().includes('password') ? 'password' : 'text';
+      const inputType = (setting.name.toLowerCase().includes('password') || setting.obfuscated) ? 'password' : 'text';
       const val = setting.value || '';
       return '<input type="' + inputType + '" id="' + id + '" value="' + escapeHtml(val) + '"' +
         ' oninput="markChanged()">';
@@ -370,10 +378,14 @@
       for (const category in groups) {
         html += '<div class="card"><h2>' + escapeHtml(category) + '</h2>';
         groups[category].forEach(function(s) {
-          html += '<div class="setting-row">' +
-            '<span class="setting-name">' + escapeHtml(s.name) + '</span>' +
-            '<span class="setting-control">' + renderControl(s) + '</span>' +
-            '</div>';
+          if (s.type === 'label') {
+            html += '<p class="setting-label">' + escapeHtml(s.name) + '</p>';
+          } else {
+            html += '<div class="setting-row">' +
+              '<span class="setting-name">' + escapeHtml(s.name) + '</span>' +
+              '<span class="setting-control">' + renderControl(s) + '</span>' +
+              '</div>';
+          }
         });
         html += '</div>';
       }

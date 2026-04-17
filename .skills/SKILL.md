@@ -65,6 +65,8 @@ find src -name "*.cpp" -o -name "*.h" | xargs clang-format -i
 
 ### Build System: PlatformIO
 
+> **See also**: `.claude/build-environment.md` for known host-machine build issues (e.g. macOS `pio` binary quirks).
+
 **PlatformIO is BOTH a VS Code extension AND a CLI tool**:
 
 1. **VS Code Extension** (Recommended):

@@ -9,7 +9,7 @@
 #include "activities/Activity.h"
 #include "util/ButtonNavigator.h"
 
-enum class SettingType { TOGGLE, ENUM, ACTION, VALUE, STRING };
+enum class SettingType { TOGGLE, ENUM, ACTION, VALUE, STRING, LABEL };
 
 enum class SettingAction {
   None,
@@ -120,6 +120,15 @@ struct SettingInfo {
     s.enumValues = std::move(values);
     s.valueGetter = std::move(getter);
     s.valueSetter = std::move(setter);
+    s.key = key;
+    s.category = category;
+    return s;
+  }
+
+  static SettingInfo Label(StrId nameId, const char* key, StrId category = StrId::STR_NONE_OPT) {
+    SettingInfo s;
+    s.nameId = nameId;
+    s.type = SettingType::LABEL;
     s.key = key;
     s.category = category;
     return s;

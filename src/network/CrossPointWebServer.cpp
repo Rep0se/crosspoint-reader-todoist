@@ -1146,8 +1146,16 @@ void CrossPointWebServer::handleGetSettings() const {
         }
         break;
       }
+      case SettingType::LABEL: {
+        doc["type"] = "label";
+        break;
+      }
       default:
         continue;
+    }
+
+    if (s.obfuscated) {
+      doc["obfuscated"] = true;
     }
 
     const size_t written = serializeJson(doc, output, outputSize);
