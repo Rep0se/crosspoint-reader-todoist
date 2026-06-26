@@ -28,6 +28,9 @@ int HomeActivity::getMenuItemCount() const {
   if (hasOpdsServers) {
     count++;
   }
+  if (hasTodoistApiKey) {
+    count++;
+  }
   return count;
 }
 
@@ -112,12 +115,14 @@ void HomeActivity::onEnter() {
   Activity::onEnter();
 
   hasOpdsServers = OPDS_STORE.hasServers();
+  hasTodoistApiKey = strlen(SETTINGS.todoistApiKey) > 0;
 
   const auto& metrics = UITheme::getInstance().getMetrics();
   loadRecentBooks(metrics.homeRecentBooksCount);
 
   const auto base = static_cast<int>(recentBooks.size());
-  selectorIndex = initialMenuItem == HomeMenuItem::NONE ? 0 : base + menuItemToIndex(initialMenuItem, hasOpdsServers);
+  selectorIndex =
+      initialMenuItem == HomeMenuItem::NONE ? 0 : base + menuItemToIndex(initialMenuItem, hasOpdsServers, hasTodoistApiKey);
 
   // Trigger first update
   requestUpdate();
@@ -184,7 +189,10 @@ void HomeActivity::loop() {
       onSelectBook(recentBooks[selectorIndex].path);
     } else {
       const int menuIndex = selectorIndex - static_cast<int>(recentBooks.size());
-      switch (indexToMenuItem(menuIndex, hasOpdsServers)) {
+      switch (indexToMenuItem(menuIndex, hasOpdsServers, hasTodoistApiKey)) {
+        case HomeMenuItem::TODOIST:
+          onTodoistOpen();
+          break;
         case HomeMenuItem::FILE_BROWSER:
           onFileBrowserOpen();
           break;
@@ -241,9 +249,14 @@ void HomeActivity::render(RenderLock&&) {
   }
 
   if (metrics.homeContinueReadingInMenu && !recentBooks.empty()) {
-    // Insert Continue Reading at the top if enabled in theme
     menuItems.insert(menuItems.begin(), tr(STR_CONTINUE_READING));
     menuIcons.insert(menuIcons.begin(), Book);
+  }
+
+  if (hasTodoistApiKey) {
+    const auto insertPos = (metrics.homeContinueReadingInMenu && !recentBooks.empty()) ? 1 : 0;
+    menuItems.insert(menuItems.begin() + insertPos, tr(STR_TODOIST));
+    menuIcons.insert(menuIcons.begin() + insertPos, Todoist);
   }
 
   GUI.drawButtonMenu(
@@ -279,5 +292,7 @@ void HomeActivity::onRecentsOpen() { activityManager.goToRecentBooks(); }
 void HomeActivity::onSettingsOpen() { activityManager.goToSettings(); }
 
 void HomeActivity::onFileTransferOpen() { activityManager.goToFileTransfer(); }
+
+void HomeActivity::onTodoistOpen() { activityManager.goToTodoist(); }
 
 void HomeActivity::onOpdsBrowserOpen() { activityManager.goToBrowser(); }

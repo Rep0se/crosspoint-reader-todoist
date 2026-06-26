@@ -16,6 +16,7 @@ class HomeActivity final : public Activity {
   bool recentsLoaded = false;
   bool firstRenderDone = false;
   bool hasOpdsServers = false;
+  bool hasTodoistApiKey = false;
   bool coverRendered = false;      // Track if cover has been rendered once
   bool coverBufferStored = false;  // Track if cover buffer is stored
   uint8_t* coverBuffer = nullptr;  // HomeActivity's own buffer for cover image
@@ -30,9 +31,13 @@ class HomeActivity final : public Activity {
   std::vector<RecentBook> recentBooks;
   const HomeMenuItem initialMenuItem;
 
-  // Convert HomeMenuItem to menu index (used in onEnter)
-  static int menuItemToIndex(HomeMenuItem item, bool hasOpdsUrl) {
+  // Convert HomeMenuItem to menu index (used in onEnter).
+  // Order must match the menu built in render(): Todoist (if key set) first,
+  // then File Browser, Recents, OPDS (if servers), File Transfer, Settings.
+  static int menuItemToIndex(HomeMenuItem item, bool hasOpdsUrl, bool hasTodoist) {
     int i = 0;
+    if (item == HomeMenuItem::TODOIST) return hasTodoist ? i : 0;
+    if (hasTodoist) ++i;
     if (item == HomeMenuItem::FILE_BROWSER) return i;
     ++i;
     if (item == HomeMenuItem::RECENTS) return i;
@@ -45,9 +50,10 @@ class HomeActivity final : public Activity {
     return 0;
   }
 
-  // Convert menu index to HomeMenuItem (used in loop)
-  static HomeMenuItem indexToMenuItem(int idx, bool hasOpdsUrl) {
+  // Convert menu index to HomeMenuItem (used in loop). Mirrors menuItemToIndex order.
+  static HomeMenuItem indexToMenuItem(int idx, bool hasOpdsUrl, bool hasTodoist) {
     int i = 0;
+    if (hasTodoist && idx == i++) return HomeMenuItem::TODOIST;
     if (idx == i++) return HomeMenuItem::FILE_BROWSER;
     if (idx == i++) return HomeMenuItem::RECENTS;
     if (hasOpdsUrl && idx == i++) return HomeMenuItem::OPDS_BROWSER;
@@ -60,6 +66,7 @@ class HomeActivity final : public Activity {
   void onRecentsOpen();
   void onSettingsOpen();
   void onFileTransferOpen();
+  void onTodoistOpen();
   void onOpdsBrowserOpen();
 
   int getMenuItemCount() const;

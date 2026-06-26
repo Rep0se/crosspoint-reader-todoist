@@ -105,7 +105,7 @@ inline std::vector<SettingInfo> getSettingsList(const SdCardFontRegistry* regist
         // --- Display ---
         SettingInfo::Enum(StrId::STR_SLEEP_SCREEN, &CrossPointSettings::sleepScreen,
                           {StrId::STR_DARK, StrId::STR_LIGHT, StrId::STR_CUSTOM, StrId::STR_COVER, StrId::STR_NONE_OPT,
-                           StrId::STR_COVER_CUSTOM, StrId::STR_QUICK_RESUME},
+                           StrId::STR_COVER_CUSTOM, StrId::STR_QUICK_RESUME, StrId::STR_CUSTOM_COVER},
                           "sleepScreen", StrId::STR_CAT_DISPLAY),
         SettingInfo::Enum(StrId::STR_SLEEP_COVER_MODE, &CrossPointSettings::sleepScreenCoverMode,
                           {StrId::STR_FIT, StrId::STR_CROP}, "sleepScreenCoverMode", StrId::STR_CAT_DISPLAY),
@@ -223,6 +223,14 @@ inline std::vector<SettingInfo> getSettingsList(const SdCardFontRegistry* regist
               KOREADER_STORE.saveToFile();
             },
             "koMatchMethod", StrId::STR_KOREADER_SYNC),
+        // --- Addons (web-only) ---
+        SettingInfo::String(StrId::STR_TODOIST_API_KEY, SETTINGS.todoistApiKey, sizeof(SETTINGS.todoistApiKey),
+                            "todoistApiKey", StrId::STR_CAT_ADDONS)
+            .withObfuscated(),
+        SettingInfo::Label(StrId::STR_TODOIST_SLEEP_HINT, "todoistSleepHint", StrId::STR_CAT_ADDONS),
+        SettingInfo::String(StrId::STR_TZ_OFFSET, SETTINGS.tzOffsetStr, sizeof(SETTINGS.tzOffsetStr), "tzOffsetStr",
+                            StrId::STR_CAT_ADDONS),
+        SettingInfo::Label(StrId::STR_TZ_OFFSET_HINT, "tzOffsetHint", StrId::STR_CAT_ADDONS),
         // --- Status Bar Settings (web-only, uses StatusBarSettingsActivity) ---
         SettingInfo::Toggle(StrId::STR_CHAPTER_PAGE_COUNT, &CrossPointSettings::statusBarChapterPageCount,
                             "statusBarChapterPageCount", StrId::STR_CUSTOMISE_STATUS_BAR),
